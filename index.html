@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Chat Mail</title>
+<title>My Chat</title>
 
 <style>
 body {
@@ -16,7 +16,8 @@ body {
   background:#202c33;
   padding:15px;
   font-size:18px;
-  text-align:center;
+  display:flex;
+  justify-content:space-between;
 }
 
 .chat {
@@ -33,26 +34,28 @@ body {
   max-width:70%;
 }
 
+.time {
+  font-size:10px;
+  opacity:0.7;
+  margin-top:5px;
+}
+
 .inputBox {
   display:flex;
   padding:10px;
   background:#202c33;
-  gap:5px;
 }
 
-input[type="text"] {
+input {
   flex:1;
   padding:10px;
   border-radius:20px;
   border:none;
 }
 
-input[type="file"] {
-  color:white;
-}
-
 button {
-  padding:10px 15px;
+  margin-left:10px;
+  padding:10px;
   background:#00a884;
   border:none;
   border-radius:20px;
@@ -63,62 +66,63 @@ button {
 
 <body>
 
-<div class="header">Chat Mail</div>
+<div class="header">
+  My Chat
+  <button onclick="clearChat()">Reset</button>
+</div>
 
 <div id="chat" class="chat"></div>
 
 <div class="inputBox">
   <input id="msg" placeholder="Type message...">
-  <input type="file" id="file">
   <button onclick="send()">Send</button>
 </div>
 
 <script>
 
-/* PASSWORD LOCK */
-let password = prompt("Enter password:");
-if(password !== "rahul123") {
-  document.body.innerHTML = "Access Denied";
+// LOAD SAVED MESSAGES
+let chatBox = document.getElementById("chat");
+let messages = JSON.parse(localStorage.getItem("chat")) || [];
+
+function render() {
+  chatBox.innerHTML = "";
+  messages.forEach(m => {
+    chatBox.innerHTML += `
+      <div class="msg">
+        ${m.text}
+        <div class="time">${m.time}</div>
+      </div>
+    `;
+  });
+  chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-/* SEND FUNCTION */
-async function send() {
+// SEND MESSAGE
+function send() {
   let text = document.getElementById("msg").value;
-  let fileInput = document.getElementById("file");
+  if(!text) return;
 
-  if(!text && !fileInput.files[0]) return;
+  let time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
-  let formData = new FormData();
-  formData.append("access_key", "8d0a2916-bb79-49de-8c37-6d7bab01d749");
-  formData.append("subject", "Chat Mail Message");
-  formData.append("from_name", "Rahul Chat");
-  formData.append("message", text);
-  formData.append("to", "iamrahuljacobrj@gmail.com");
-
-  if(fileInput.files[0]) {
-    formData.append("file", fileInput.files[0]);
-  }
-
-  let res = await fetch("https://api.web3forms.com/submit", {
-    method: "POST",
-    body: formData
-  });
-
-  let data = await res.json();
-
-  if(data.success) {
-    document.getElementById("chat").innerHTML +=
-      `<div class="msg">${text || "📎 File sent"}</div>`;
-  } else {
-    alert("Error: " + JSON.stringify(data));
-  }
+  messages.push({text, time});
+  localStorage.setItem("chat", JSON.stringify(messages));
 
   document.getElementById("msg").value = "";
-  fileInput.value = "";
-
-  let chat = document.getElementById("chat");
-  chat.scrollTop = chat.scrollHeight;
+  render();
 }
+
+// CLEAR CHAT
+function clearChat() {
+  if(confirm("Clear all messages?")) {
+    localStorage.removeItem("chat");
+    messages = [];
+    render();
+  }
+}
+
+// INITIAL LOAD
+render();
+
 </script>
 
 </body>
