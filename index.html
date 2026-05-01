@@ -74,7 +74,8 @@ button {
 </div>
 
 <script>
-/* BASIC PASSWORD LOCK */
+
+/* PASSWORD LOCK */
 let password = prompt("Enter password:");
 if(password !== "rahul123") {
   document.body.innerHTML = "Access Denied";
@@ -92,18 +93,25 @@ async function send() {
   formData.append("subject", "Chat Mail Message");
   formData.append("from_name", "Rahul Chat");
   formData.append("message", text);
+  formData.append("to", "iamrahuljacobrj@gmail.com");
 
   if(fileInput.files[0]) {
     formData.append("file", fileInput.files[0]);
   }
 
-  await fetch("https://api.web3forms.com/submit", {
+  let res = await fetch("https://api.web3forms.com/submit", {
     method: "POST",
     body: formData
   });
 
-  document.getElementById("chat").innerHTML +=
-    `<div class="msg">${text || "📎 File sent"}</div>`;
+  let data = await res.json();
+
+  if(data.success) {
+    document.getElementById("chat").innerHTML +=
+      `<div class="msg">${text || "📎 File sent"}</div>`;
+  } else {
+    alert("Error: " + JSON.stringify(data));
+  }
 
   document.getElementById("msg").value = "";
   fileInput.value = "";
